@@ -8,29 +8,25 @@ except ImportError:
     print("Please run: pip install huggingface_hub")
     sys.exit(1)
 
-# Configuration
+#--------------| configuration |-------------
 MODEL_DIR = "model"
 MODEL_FILE = "qwen2.5-coder-1.5b-instruct-q8_0.gguf"
 REPO_ID = "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF"
 MODEL_PATH = os.path.join(MODEL_DIR, MODEL_FILE)
 
+#--------------| model initialization |-------------
 def init_model():
-    """Checks for the model directory and file, downloading via huggingface_hub if missing."""
-    # 1. Check if the model folder exists, create if not
     if not os.path.exists(MODEL_DIR):
         print(f"Directory '{MODEL_DIR}' not found. Creating it...")
         os.makedirs(MODEL_DIR)
     else:
         print(f"Directory '{MODEL_DIR}' already exists.")
 
-    # 2. Check if the model file exists, download if not
     if not os.path.exists(MODEL_PATH):
         print(f"Model file '{MODEL_FILE}' not found.")
         print(f"Starting download from Hugging Face using huggingface_hub...")
         
         try:
-            # hf_hub_download automatically handles the download, 
-            # shows a visual progress bar, and places it in the target directory.
             hf_hub_download(
                 repo_id=REPO_ID,
                 filename=MODEL_FILE,
@@ -41,7 +37,6 @@ def init_model():
             
         except Exception as e:
             print(f"\nAn error occurred during the download: {e}")
-            # Clean up the file if it left a partial download behind
             if os.path.exists(MODEL_PATH):
                 os.remove(MODEL_PATH)
             sys.exit(1)
