@@ -16,7 +16,7 @@
     "code_or_vocab_list": -1.72,
     "structured_labels": 0.22
   },
-  "trained_at": "2026-07-07 23:35:09",
+  "trained_at": "2026-07-08 00:11:16",
   "training_rows": 2460,
   "labels": {
     "USEFUL": 0,
