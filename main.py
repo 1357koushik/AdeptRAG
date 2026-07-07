@@ -4,6 +4,22 @@ import json
 import tiktoken
 from classifier import classify_text
 
+from prompt_toolkit import PromptSession
+from prompt_toolkit.auto_suggest import AutoSuggest, Suggestion
+
+class CommandSuggest(AutoSuggest):
+    def __init__(self, commands):
+        self.commands = commands
+        
+    def get_suggestion(self, buffer, document):
+        text = document.text
+        if not text:
+            return None
+        for cmd in self.commands:
+            if cmd.startswith(text) and cmd != text:
+                return Suggestion(cmd[len(text):])
+        return None
+
 # Enable ANSI escape sequences on Windows
 if os.name == 'nt':
     os.system("")
@@ -30,9 +46,11 @@ def main():
         print("  /mount <folder> - Ingest documents from a folder")
         print("  /quit           - Exit the CLI\n")
         
+        session = PromptSession(auto_suggest=CommandSuggest(['/mount ', '/quit', '/exit']))
+        
         while True:
             try:
-                user_input = input("arag> ").strip()
+                user_input = session.prompt("arag> ").strip()
             except (KeyboardInterrupt, EOFError):
                 print("\nExiting...")
                 break
@@ -51,7 +69,8 @@ def main():
                     print(f"\n[Mounting folder: {folder}...]")
                     if os.path.exists(folder) and os.path.isdir(folder):
                         enc = tiktoken.get_encoding("cl100k_base")
-                        chunk_size = 512
+                        chunk_size = 1200
+                        chunk_overlap = 100
                         
                         allowed_exts = {'.txt', '.md', '.json', '.csv', '.py', '.js', '.html'}
                         for root, _, files in os.walk(folder):
@@ -66,7 +85,8 @@ def main():
                                     tokens = enc.encode(content)
                                     if not tokens:
                                         continue
-                                    for i in range(0, len(tokens), chunk_size):
+                                        
+                                    for i in range(0, len(tokens), chunk_size - chunk_overlap):
                                         chunk_tokens = tokens[i:i + chunk_size]
                                         chunk_text = enc.decode(chunk_tokens)
                                         
@@ -80,7 +100,7 @@ def main():
                                         else:
                                             final_output = 'Useful'
                                             
-                                        print(f"- {file} (Chunk {i//chunk_size + 1}): {final_output}")
+                                        print(f"- {file} (Chunk {i // (chunk_size - chunk_overlap) + 1}): {final_output}")
                                 except Exception as e:
                                     print(f"  Skipping {file}: {e}")
                     else:

@@ -1,0 +1,58 @@
+{
+  "threshold": 0.0,
+  "weights": {
+    "repeated_lines": 2.46,
+    "log_patterns": 2.86,
+    "blob_like": 3.22,
+    "long_lines": -1.33,
+    "minified_shape": 2.83,
+    "low_alpha": 1.35,
+    "numeric_csv": 1.8,
+    "random_ids": 2.16,
+    "metadata_dump": 0.47,
+    "prose": -0.92,
+    "document_ext": -1.61,
+    "code_shape": -0.11,
+    "code_or_vocab_list": -1.72,
+    "structured_labels": 0.22
+  },
+  "trained_at": "2026-07-07 23:35:09",
+  "training_rows": 2460,
+  "labels": {
+    "USEFUL": 0,
+    "NOT_USEFUL": 1
+  },
+  "sources": {
+    "public_logs": [
+      "https://raw.githubusercontent.com/logpai/loghub/master/HDFS/HDFS_2k.log",
+      "https://raw.githubusercontent.com/logpai/loghub/master/BGL/BGL_2k.log",
+      "https://raw.githubusercontent.com/logpai/loghub/master/Apache/Apache_2k.log",
+      "https://raw.githubusercontent.com/logpai/loghub/master/Linux/Linux_2k.log"
+    ],
+    "public_useful_docs": [
+      "https://raw.githubusercontent.com/scikit-learn/scikit-learn/main/README.rst",
+      "https://raw.githubusercontent.com/pallets/flask/main/README.md",
+      "https://raw.githubusercontent.com/python/cpython/main/README.rst",
+      "https://raw.githubusercontent.com/psf/requests/main/README.md",
+      "https://raw.githubusercontent.com/numpy/numpy/main/README.md",
+      "https://raw.githubusercontent.com/pandas-dev/pandas/main/README.md",
+      "https://raw.githubusercontent.com/microsoft/TypeScript/main/README.md",
+      "https://raw.githubusercontent.com/rust-lang/rust/master/README.md",
+      "https://raw.githubusercontent.com/django/django/main/README.rst",
+      "https://raw.githubusercontent.com/fastapi/fastapi/master/README.md"
+    ],
+    "edge_cases": [
+      "stack traces",
+      "request logs",
+      "base64/blob text",
+      "numeric CSV dumps",
+      "minified JSON",
+      "minified CSS",
+      "repeated boilerplate",
+      "metadata dumps",
+      "human prose",
+      "meaningful source code",
+      "meaningful YAML/config notes"
+    ]
+  }
+}

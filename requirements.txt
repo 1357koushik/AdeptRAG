@@ -1,3 +1,4 @@
 psutil
 huggingface_hub
 tiktoken
+prompt_toolkit

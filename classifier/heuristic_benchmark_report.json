@@ -1,0 +1,218 @@
+{
+  "config_path": "B:\\github\\AdeptRAG\\classifier\\heuristic_config.json",
+  "dataset_path": "B:\\github\\AdeptRAG\\classifier\\heuristic_training_dataset.jsonl",
+  "training_rows": 2460,
+  "useful_rows": 1200,
+  "not_useful_rows": 1260,
+  "benchmark": {
+    "accuracy": 0.9821138211382113,
+    "not_useful_precision": 0.9991789819376026,
+    "not_useful_recall": 0.9658730158730159,
+    "not_useful_f1": 0.9822437449556093,
+    "confusion": {
+      "true_not_useful": 1217,
+      "true_useful": 1199,
+      "false_not_useful": 1,
+      "false_useful": 43
+    },
+    "mistakes_sample": [
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "Jul 15 23:42:43 combo ftpd[15340]: connection from 211.107.232.1 () at Fri Jul 15 23:42:43 2005 \nJul 15 23:42:43 combo ftpd[15327]: connection from 211.107.232.1 () at Fri Jul 15 23:42:43 2005 \nJul 15 23:42:43 combo ftpd[15333]: connection "
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "- 1133448302 2005.12.01 R75-M0-N4-C:J12-U01 2005-12-01-06.45.02.528716 R75-M0-N4-C:J12-U01 RAS KERNEL INFO 10718 total interrupts. 0 critical input interrupts. 0 microseconds total spent on critical input interrupts, 0 microseconds max time"
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "Jul 16 08:14:07 combo ftpd[17684]: connection from 212.65.68.82 () at Sat Jul 16 08:14:07 2005 \nJul 16 08:14:07 combo ftpd[17685]: connection from 212.65.68.82 () at Sat Jul 16 08:14:07 2005 \nJul 16 08:14:07 combo ftpd[17686]: connection fr"
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "- 1120263061 2005.07.01 R31-M1-N2-C:J14-U01 2005-07-01-17.11.01.016985 R31-M1-N2-C:J14-U01 RAS KERNEL INFO 1146800 double-hummer alignment exceptions\n- 1120263168 2005.07.01 R24-M0-N3-C:J09-U01 2005-07-01-17.12.48.485919 R24-M0-N3-C:J09-U01"
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "[Sun Dec 04 20:26:58 2005] [notice] jk2_init() Found child 1959 in scoreboard slot 9\n[Sun Dec 04 20:26:58 2005] [notice] jk2_init() Found child 1958 in scoreboard slot 6\n[Sun Dec 04 20:27:43 2005] [notice] jk2_init() Found child 1961 in sco"
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "- 1131128083 2005.11.04 R62-M0-N4-C:J14-U01 2005-11-04-10.14.43.761466 R62-M0-N4-C:J14-U01 RAS KERNEL INFO iar 00105fd4 dear 0245a09c\n- 1131128104 2005.11.04 R62-M0-N0-C:J17-U01 2005-11-04-10.15.04.044405 R62-M0-N0-C:J17-U01 RAS KERNEL INFO"
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "[Sun Dec 04 17:36:14 2005] [notice] jk2_init() Found child 1513 in scoreboard slot 6\n[Sun Dec 04 17:37:08 2005] [notice] jk2_init() Found child 1517 in scoreboard slot 7\n[Sun Dec 04 17:37:08 2005] [notice] jk2_init() Found child 1518 in sco"
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "Jun 18 02:08:10 combo ftpd[31278]: connection from 82.252.162.81 (lns-vlq-45-tou-82-252-162-81.adsl.proxad.net) at Sat Jun 18 02:08:10 2005 \nJun 18 02:08:11 combo ftpd[31279]: connection from 82.252.162.81 (lns-vlq-45-tou-82-252-162-81.adsl"
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "Jul 27 14:41:58 combo random: Initializing random number generator:  succeeded\nJul 27 14:41:58 combo kernel: POSIX conformance testing by UNIFIX\nJul 27 14:41:58 combo kernel: NET: Registered protocol family 16\nJul 27 14:41:58 combo kernel: "
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "- 1131127207 2005.11.04 R62-M0-N1-C:J10-U01 2005-11-04-10.00.07.211412 R62-M0-N1-C:J10-U01 RAS KERNEL INFO iar 00106704 dear 0245b80c\n- 1131127212 2005.11.04 R62-M0-NF-C:J03-U01 2005-11-04-10.00.12.875334 R62-M0-NF-C:J03-U01 RAS KERNEL INFO"
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "Jul 22 19:29:09 combo ftpd[13141]: connection from 67.95.49.172 () at Fri Jul 22 19:29:09 2005 \nJul 22 19:29:09 combo ftpd[13146]: connection from 67.95.49.172 () at Fri Jul 22 19:29:09 2005 \nJul 22 19:29:09 combo ftpd[13140]: connection fr"
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "- 1120487708 2005.07.04 R34-M1-N4-C:J09-U11 2005-07-04-07.35.08.890879 R34-M1-N4-C:J09-U11 RAS KERNEL INFO generating core.13558\n- 1120487796 2005.07.04 R02-M1-N8-C:J17-U01 2005-07-04-07.36.36.338885 R02-M1-N8-C:J17-U01 RAS KERNEL INFO gene"
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "- 1133447958 2005.12.01 R13-M1-N9-C:J02-U11 2005-12-01-06.39.18.093254 R13-M1-N9-C:J02-U11 RAS KERNEL INFO 0 microseconds spent in the rbs signal handler during 0 calls. 0 microseconds was the maximum time for a single instance of a correct"
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "- 1133448656 2005.12.01 R27-M1-NA-C:J05-U11 2005-12-01-06.50.56.045860 R27-M1-NA-C:J05-U11 RAS KERNEL INFO 10744 total interrupts. 0 critical input interrupts. 0 microseconds total spent on critical input interrupts, 0 microseconds max time"
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "Jul 27 14:41:57 combo kernel: DMI 2.3 present.\nJul 27 14:41:57 combo kernel: ACPI disabled because your bios is from 2000 and too old\nJul 27 14:41:57 combo kernel: You can enable it with acpi=force\nJul 27 14:41:57 combo kernel: Built 1 zone"
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "- 1122165304 2005.07.23 R16-M0-N0-C:J10-U01 2005-07-23-17.35.04.461170 R16-M0-N0-C:J10-U01 RAS KERNEL INFO 5 floating point alignment exceptions\n- 1122165425 2005.07.23 R14-M1-N3-C:J15-U01 2005-07-23-17.37.05.399108 R14-M1-N3-C:J15-U01 RAS "
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "Jul  7 08:09:11 combo udev[12754]: removing device node '/udev/vcsa2'\nJul  7 08:09:11 combo udev[12753]: removing device node '/udev/vcs2'\nJul  7 08:09:11 combo udev[12777]: creating device node '/udev/vcs2'\nJul  7 08:09:11 combo udev[12778"
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "Jul 16 04:13:59 combo su(pam_unix)[17286]: session opened for user news by (uid=0)\nJul 16 04:14:00 combo su(pam_unix)[17286]: session closed for user news\nJul 16 08:14:04 combo ftpd[17669]: connection from 212.65.68.82 () at Sat Jul 16 08:1"
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "- 1131060431 2005.11.03 R66-M1-ND-C:J12-U11 2005-11-03-15.27.11.996914 R66-M1-ND-C:J12-U11 RAS KERNEL INFO iar 00106568 dear 02494bec\n- 1131060537 2005.11.03 R67-M0-N4-C:J10-U01 2005-11-03-15.28.57.931792 R67-M0-N4-C:J10-U01 RAS KERNEL INFO"
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "Jul 25 14:08:28 combo named[2306]: notify question section contains no SOA\nJul 25 14:17:19 combo named[2306]: notify question section contains no SOA\nJul 25 14:33:46 combo named[2306]: notify question section contains no SOA\nJul 25 14:48:30"
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "Jul 27 14:41:59 combo kernel: apm: BIOS version 1.2 Flags 0x03 (Driver version 1.16ac)\nJul 27 14:41:59 combo kernel: audit: initializing netlink socket (disabled)\nJul 27 14:41:54 combo sysctl: kernel.core_uses_pid = 1 \nJul 27 14:41:59 combo"
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "081110 210549 19 INFO dfs.FSDataset: Deleting block blk_6085442148007558065 file /mnt/hadoop/dfs/data/current/subdir63/blk_6085442148007558065\n081110 210555 19 INFO dfs.FSDataset: Deleting block blk_1746384029810476219 file /mnt/hadoop/dfs/"
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "Jul 10 03:55:15 combo ftpd[24534]: connection from 217.187.83.139 () at Sun Jul 10 03:55:15 2005 \nJul 10 04:04:31 combo su(pam_unix)[24898]: session opened for user cyrus by (uid=0)\nJul 10 04:04:32 combo su(pam_unix)[24898]: session closed "
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "Jun 25 19:25:30 combo ftpd[32323]: connection from 211.167.68.59 () at Sat Jun 25 19:25:30 2005 \nJun 25 19:25:30 combo ftpd[32327]: connection from 211.167.68.59 () at Sat Jun 25 19:25:30 2005 \nJun 25 19:25:30 combo ftpd[32325]: connection "
+      },
+      {
+        "actual": "NOT_USEFUL",
+        "predicted": "USEFUL",
+        "suffix": ".log",
+        "text": "- 1125219610 2005.08.28 R72-M1-NA-C:J04-U11 2005-08-28-02.00.10.847914 R72-M1-NA-C:J04-U11 RAS KERNEL INFO 147337410 double-hummer alignment exceptions\n- 1125220160 2005.08.28 R73-M1-N8-C:J06-U01 2005-08-28-02.09.20.654913 R73-M1-N8-C:J06-U"
+      }
+    ]
+  },
+  "edge_case_benchmark": {
+    "accuracy": 1.0,
+    "not_useful_precision": 1.0,
+    "not_useful_recall": 1.0,
+    "not_useful_f1": 1.0,
+    "confusion": {
+      "true_not_useful": 300,
+      "true_useful": 300,
+      "false_not_useful": 0,
+      "false_useful": 0
+    },
+    "mistakes_sample": []
+  },
+  "edge_case_rows": 600,
+  "sources": {
+    "public_logs": [
+      "https://raw.githubusercontent.com/logpai/loghub/master/HDFS/HDFS_2k.log",
+      "https://raw.githubusercontent.com/logpai/loghub/master/BGL/BGL_2k.log",
+      "https://raw.githubusercontent.com/logpai/loghub/master/Apache/Apache_2k.log",
+      "https://raw.githubusercontent.com/logpai/loghub/master/Linux/Linux_2k.log"
+    ],
+    "public_useful_docs": [
+      "https://raw.githubusercontent.com/scikit-learn/scikit-learn/main/README.rst",
+      "https://raw.githubusercontent.com/pallets/flask/main/README.md",
+      "https://raw.githubusercontent.com/python/cpython/main/README.rst",
+      "https://raw.githubusercontent.com/psf/requests/main/README.md",
+      "https://raw.githubusercontent.com/numpy/numpy/main/README.md",
+      "https://raw.githubusercontent.com/pandas-dev/pandas/main/README.md",
+      "https://raw.githubusercontent.com/microsoft/TypeScript/main/README.md",
+      "https://raw.githubusercontent.com/rust-lang/rust/master/README.md",
+      "https://raw.githubusercontent.com/django/django/main/README.rst",
+      "https://raw.githubusercontent.com/fastapi/fastapi/master/README.md"
+    ],
+    "edge_cases": [
+      "stack traces",
+      "request logs",
+      "base64/blob text",
+      "numeric CSV dumps",
+      "minified JSON",
+      "minified CSS",
+      "repeated boilerplate",
+      "metadata dumps",
+      "human prose",
+      "meaningful source code",
+      "meaningful YAML/config notes"
+    ]
+  }
+}
