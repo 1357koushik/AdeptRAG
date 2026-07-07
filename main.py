@@ -2,7 +2,13 @@ import os
 import sys
 import json
 import tiktoken
+from dotenv import load_dotenv
 from classifier import classify_text
+from model.extractor import extract_entities
+from db.graph_store import GraphStore
+
+# Load environment variables (API keys)
+load_dotenv()
 
 from prompt_toolkit import PromptSession
 from prompt_toolkit.auto_suggest import AutoSuggest, Suggestion
@@ -39,14 +45,27 @@ def main():
     try:
         enter_alt_screen()
         
+        current_model = "gpt-4o-mini"
+        available_models = [
+            "gpt-4o-mini", 
+            "gpt-4o", 
+            "claude-3-5-sonnet-20240620", 
+            "gemini-2.5-flash-lite", 
+            "ollama/llama3", 
+            "ollama/mistral-nemo"
+        ]
+        
+        graph_store = GraphStore()
+        
         print("==================================================")
         print("            AdeptRAG Interactive CLI              ")
         print("==================================================")
         print("Available commands:")
         print("  /mount <folder> - Ingest documents from a folder")
+        print("  /model <name>   - Change the extraction LLM model")
         print("  /quit           - Exit the CLI\n")
         
-        session = PromptSession(auto_suggest=CommandSuggest(['/mount ', '/quit', '/exit']))
+        session = PromptSession(auto_suggest=CommandSuggest(['/mount ', '/model ', '/quit', '/exit']))
         
         while True:
             try:
@@ -96,13 +115,27 @@ def main():
                                         label = result.get('label', 'Uncertain')
                                         
                                         if label == 'Data Dump':
-                                            final_output = 'Dump Data'
+                                            print(f"- {file} (Chunk {i // (chunk_size - chunk_overlap) + 1}): Dump Data (Skipping LLM)")
                                         else:
-                                            final_output = 'Useful'
-                                            
-                                        print(f"- {file} (Chunk {i // (chunk_size - chunk_overlap) + 1}): {final_output}")
+                                            print(f"- {file} (Chunk {i // (chunk_size - chunk_overlap) + 1}): Useful -> Extracting with {current_model}...")
+                                            extracted = extract_entities(chunk_text, current_model)
+                                            entities_count = sum(1 for e in extracted if e['type'] == 'entity')
+                                            relations_count = sum(1 for e in extracted if e['type'] == 'relation')
+                                            print(f"  -> Extracted {entities_count} entities, {relations_count} relations.")
+                                            for item in extracted:
+                                                if item['type'] == 'entity':
+                                                    graph_store.upsert_entity(item['name'], item.get('entity_type', ''), item.get('description', ''))
+                                                    print(f"     [Entity] {item['name']} ({item.get('entity_type', '')})")
+                                                elif item['type'] == 'relation':
+                                                    graph_store.upsert_relation(item['source'], item['target'], item.get('keywords', ''), item.get('description', ''))
+                                                    print(f"     [Relation] {item['source']} -> {item['target']} ({item.get('keywords', '')})")
+                                                    
                                 except Exception as e:
                                     print(f"  Skipping {file}: {e}")
+                                    
+                        # Save graph to disk after processing folder
+                        graph_store.save_to_disk()
+                        
                     else:
                         print(f"Error: Directory '{folder}' not found.")
                     print("\n[Mount complete]\n")
@@ -110,8 +143,20 @@ def main():
                     print("Usage: /mount <folder_path>\n")
             elif command == '/mount':
                 print("Usage: /mount <folder_path>\n")
+            elif command.startswith('/model'):
+                parts = user_input.split(maxsplit=1)
+                if len(parts) > 1:
+                    new_model = parts[1].strip()
+                    current_model = new_model
+                    print(f"\n[Model updated to: {current_model}]\n")
+                else:
+                    print(f"\nCurrent Model: {current_model}")
+                    print("Best models for this job:")
+                    for m in available_models:
+                        print(f"  - {m}")
+                    print("Usage: /model <model_name>\n")
             else:
-                print(f"Unknown command. Try '/mount <folder>' or '/quit'.\n")
+                print(f"Unknown command. Try '/mount <folder>', '/model <name>', or '/quit'.\n")
     finally:
         # Guarantee we restore the terminal even if it crashes
         exit_alt_screen()

@@ -13,7 +13,6 @@
 ## ✨ Key Features
 
 - **Intelligent Chunk Filtering:** Maximizes indexing efficiency and prevents graph bloat by automatically routing list-heavy or non-narrative data directly to the vector database, bypassing expensive graph extraction.
-- **Cross-Document Entity Disambiguation:** Maintains a densely connected knowledge graph by using vector semantic similarity to automatically merge synonymous entities (e.g., "Apple" and "Apple Inc.") across different documents.
 - **Async Community Summarization:** Pre-computes and summarizes graph communities in the background using hierarchical clustering. This drastically reduces query latency for global, thematic questions from minutes to seconds.
 - **Agentic Query Routing:** An LLM-driven router autonomously analyzes user intents to direct queries to the Vector DB, Local Graph, or Global Summaries, ensuring the most efficient retrieval path is always used.
 - **Self-Reflective Retrieval:** Implements a critique loop where the system evaluates its own drafted answers. If confidence is low, it triggers fallbacks (like expanding graph hops or querying the web) to prevent hallucinations.

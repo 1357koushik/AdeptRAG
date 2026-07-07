@@ -2,3 +2,8 @@ psutil
 huggingface_hub
 tiktoken
 prompt_toolkit
+networkx
+python-dotenv
+openai
+anthropic
+google-genai
