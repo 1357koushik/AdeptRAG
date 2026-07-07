@@ -1,2 +1,3 @@
 psutil
 huggingface_hub
+tiktoken

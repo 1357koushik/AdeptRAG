@@ -37,3 +37,7 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db
+
+#my temp files
+implementation_plan.md
+reference/

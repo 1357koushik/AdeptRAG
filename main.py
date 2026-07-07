@@ -1,8 +1,8 @@
 import os
 import sys
-from server_downloader import ensure_server_exists
-from model_downloader import ensure_model_exists
-from llm_server import LocalLlama
+import json
+import tiktoken
+from classifier import classify_text
 
 # Enable ANSI escape sequences on Windows
 if os.name == 'nt':
@@ -20,59 +20,78 @@ def exit_alt_screen():
 
 #--------------| main execution |-------------
 def main():
-    SERVER_EXE = r"./bin/llama-server.exe" 
-    
-    # Check dependencies before taking over the screen so any download progress is visible
-    ensure_server_exists(SERVER_EXE)
-    MODEL_FILE = ensure_model_exists("./model")
-
     try:
         enter_alt_screen()
         
         print("==================================================")
         print("            AdeptRAG Interactive CLI              ")
         print("==================================================")
-        print("Starting local AI Server... please wait.\n")
+        print("Available commands:")
+        print("  /mount <folder> - Ingest documents from a folder")
+        print("  /quit           - Exit the CLI\n")
         
-        with LocalLlama(SERVER_EXE, MODEL_FILE) as llm:
-            # Clear the screen once the server is successfully booted
-            sys.stdout.write('\033[H\033[J')
-            sys.stdout.flush()
-            
-            print("==================================================")
-            print("            AdeptRAG Interactive CLI              ")
-            print("==================================================")
-            print("Server is Online! Available commands:")
-            print("  /msg <text> - Chat with the model")
-            print("  /quit       - Exit and shut down the server\n")
-            
-            while True:
-                try:
-                    user_input = input("arag> ").strip()
-                except (KeyboardInterrupt, EOFError):
-                    print("\nShutting down...")
-                    break
-                    
-                if not user_input:
-                    continue
-                    
-                command = user_input.lower()
+        while True:
+            try:
+                user_input = input("arag> ").strip()
+            except (KeyboardInterrupt, EOFError):
+                print("\nExiting...")
+                break
                 
-                if command in ['/quit', '/exit']:
-                    print("Shutting down server and exiting...")
-                    break
-                elif command.startswith('/msg '):
-                    prompt = user_input[5:].strip()
-                    if prompt:
-                        print("\n[AI thinking...]")
-                        answer = llm.ask(prompt)
-                        print(f"\n[AI]: {answer}\n")
+            if not user_input:
+                continue
+                
+            command = user_input.lower()
+            
+            if command in ['/quit', '/exit']:
+                print("Exiting...")
+                break
+            elif command.startswith('/mount '):
+                folder = user_input[7:].strip()
+                if folder:
+                    print(f"\n[Mounting folder: {folder}...]")
+                    if os.path.exists(folder) and os.path.isdir(folder):
+                        enc = tiktoken.get_encoding("cl100k_base")
+                        chunk_size = 512
+                        
+                        allowed_exts = {'.txt', '.md', '.json', '.csv', '.py', '.js', '.html'}
+                        for root, _, files in os.walk(folder):
+                            for file in files:
+                                if not any(file.endswith(ext) for ext in allowed_exts):
+                                    continue
+                                filepath = os.path.join(root, file)
+                                try:
+                                    with open(filepath, 'r', encoding='utf-8') as f:
+                                        content = f.read()
+                                    
+                                    tokens = enc.encode(content)
+                                    if not tokens:
+                                        continue
+                                    for i in range(0, len(tokens), chunk_size):
+                                        chunk_tokens = tokens[i:i + chunk_size]
+                                        chunk_text = enc.decode(chunk_tokens)
+                                        
+                                        result_json = classify_text(chunk_text)
+                                        result = json.loads(result_json)
+                                        
+                                        label = result.get('label', 'Uncertain')
+                                        
+                                        if label == 'Data Dump':
+                                            final_output = 'Dump Data'
+                                        else:
+                                            final_output = 'Useful'
+                                            
+                                        print(f"- {file} (Chunk {i//chunk_size + 1}): {final_output}")
+                                except Exception as e:
+                                    print(f"  Skipping {file}: {e}")
                     else:
-                        print("Usage: /msg <your message>\n")
-                elif command == '/msg':
-                    print("Usage: /msg <your message>\n")
+                        print(f"Error: Directory '{folder}' not found.")
+                    print("\n[Mount complete]\n")
                 else:
-                    print(f"Unknown command. Try '/msg <text>' or '/quit'.\n")
+                    print("Usage: /mount <folder_path>\n")
+            elif command == '/mount':
+                print("Usage: /mount <folder_path>\n")
+            else:
+                print(f"Unknown command. Try '/mount <folder>' or '/quit'.\n")
     finally:
         # Guarantee we restore the terminal even if it crashes
         exit_alt_screen()
