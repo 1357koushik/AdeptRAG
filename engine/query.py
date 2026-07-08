@@ -2,19 +2,22 @@ import json
 from db.vector_store import VectorStore
 from db.graph_store import GraphStore
 from model.llm import generate_text
+from duckduckgo_search import DDGS
 
 KEYWORD_EXTRACTION_SYSTEM_PROMPT = """You are an expert AI assistant tasked with extracting key information from user queries for a dual-search Retrieval-Augmented Generation (RAG) system.
-Your job is to identify and separate keywords into two distinct categories:
+Your job is to identify and separate keywords into distinct categories, and also determine if the query requires real-time or external web data.
 
 1. "low_level": Specific entities, names, locations, acronyms, or concrete objects (e.g., "Elon Musk", "San Francisco", "API", "Q3 Revenue").
 2. "high_level": Broad concepts, themes, actions, or topical domains (e.g., "artificial intelligence", "climate change impact", "financial performance", "software integration").
+3. "requires_web_search": A boolean indicating if the user is asking about current events, real-time data, or something likely not in a static local database (e.g., "today's weather", "latest news").
 
-You must return ONLY a valid JSON object with these two keys, containing lists of strings. Do not include any markdown formatting like ```json or any conversational text.
+You must return ONLY a valid JSON object with these three keys. Do not include any markdown formatting like ```json or any conversational text.
 
 Example Output:
 {
   "low_level": ["Frodo", "Ring", "Mount Doom"],
-  "high_level": ["journey", "destruction", "temptation"]
+  "high_level": ["journey", "destruction", "temptation"],
+  "requires_web_search": false
 }"""
 
 KEYWORD_EXTRACTION_USER_PROMPT = """Extract keywords from the following query:
@@ -24,10 +27,11 @@ KEYWORD_EXTRACTION_USER_PROMPT = """Extract keywords from the following query:
 FINAL_GENERATION_SYSTEM_PROMPT = """You are a highly intelligent knowledge synthesizer and AI assistant. 
 Your task is to answer the user's query comprehensively and accurately based STRICTLY on the provided context.
 
-The context is aggregated from a Knowledge Graph (Nodes and Relationships) and a Vector Database (Text Chunks).
+The context is aggregated from a Knowledge Graph (Nodes and Relationships), a Vector Database (Text Chunks), and external Web Search Results (if retrieved).
 - Synthesize the information logically.
 - If the context contains conflicting information, mention it.
 - If the context does not contain sufficient information to fully answer the query, state what is missing instead of hallucinating.
+- If the context includes Web Results, cite the sources by including their URL links in your answer where appropriate.
 - Keep your answer clear, well-structured, and directly address the user's intent."""
 
 FINAL_GENERATION_USER_PROMPT = """---Context---
@@ -69,7 +73,7 @@ class QueryEngine:
         except json.JSONDecodeError:
             print(f"  [!] Failed to parse keywords JSON: {response}")
             # Fallback
-            return {"low_level": [query], "high_level": []}
+            return {"low_level": [query], "high_level": [], "requires_web_search": False}
 
     def _build_query_context(self, keywords: dict, query: str) -> str:
         """Retrieves data from both Vector and Graph stores and formats it into a context string."""
@@ -142,17 +146,49 @@ class QueryEngine:
             
         return "\n".join(context_parts)
 
+    def perform_web_search(self, query: str) -> str:
+        """Performs a web search using duckduckgo-search and formats the results."""
+        print(f"  [WebSearch] Fetching real-time information for: '{query}'...")
+        try:
+            results = DDGS().text(query, max_results=3)
+            # convert to list as it might be a generator
+            results = list(results)
+            print(f"  [WebSearch] Got {len(results)} results")
+            if not results:
+                return ""
+            
+            formatted = []
+            for i, r in enumerate(results):
+                title = r.get("title", "")
+                body = r.get("body", "")
+                href = r.get("href", "")
+                formatted.append(f"--- Web Result {i+1} ---\nTitle: {title}\nLink: {href}\nSnippet: {body}")
+            return "\n\n".join(formatted)
+        except Exception as e:
+            print(f"  [!] Web search failed: {e}")
+            return ""
+
     def query(self, user_query: str) -> tuple[str, str]:
         """Executes the full dual-search RAG pipeline."""
         # 1. Keyword Extraction
         keywords = self.get_keywords_from_query(user_query)
         print(f"  -> Keywords extracted: {keywords}")
+        requires_web = keywords.get("requires_web_search", False)
         
         # 2. Context Building
         context_string = self._build_query_context(keywords, user_query)
         
         if not context_string.strip():
             print("  [!] Warning: No relevant context found in VectorDB or GraphDB.")
+            
+        if requires_web:
+            print("  [*] Router determined web search is required for this query.")
+            web_context = self.perform_web_search(user_query)
+            if web_context:
+                if context_string.strip():
+                    context_string += "\n\n===== REAL-TIME WEB RESULTS =====\n\n" + web_context
+                else:
+                    context_string = "===== REAL-TIME WEB RESULTS =====\n\n" + web_context
             
         # 3. Final Generation
         print(f"[QueryEngine] Generating final answer using {self.model_name}...")

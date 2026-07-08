@@ -11,3 +11,4 @@ fastapi
 uvicorn
 jinja2
 chromadb
+duckduckgo-search

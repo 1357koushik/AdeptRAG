@@ -1,0 +1,177 @@
+---Context---
+===== SEMANTIC TEXT CHUNKS =====
+--- Chunk 1 ---
+ scat schlong scissoring semen sex sexcam sexo sexy sexual sexually sexuality shaved beaver shaved pussy shemale shibari shit shitblimp shitty shota shrimping skeet slanteye slut s&m smut snatch snowballing sodomize sodomy spastic spic splooge splooge moose spooge spread legs spunk strap on strapon strappado strip club style doggy suck sucks suicide girls sultry women swastika swinger tainted love taste my tea bagging threesome throating thumbzilla tied up tight white tit tits titties titty tongue in a topless tosser towelhead tranny tribadism tub girl tubgirl tushy twat twink twinkie two girls one cup undressing upskirt urethra play urophilia vagina venus mound viagra vibrator violet wand vorarephilia voyeur voyeurweb voyuer vulva wank wetback wet dream white power whore worldsex wrapping men wrinkled starfish xx xxx yaoi yellow showers yiffy zoophilia 🖕"
+--- Chunk 2 ---
+import bascenev1 as bs
+import random
+
+class TextOnMap:
+    def __init__(self):
+        self._show_watermarks()
+        self._setup_center_messages()
+
+    def _show_watermarks(self):
+        bs.newnode('text',
+            attrs={
+                'text': u'\ue048Owner:- ---|pixel|---\n\ue048Editor:- ---|pixel|---',
+                'flatness': 1.0,
+                'h_align': 'left',
+                'v_attach': 'bottom',
+                'h_attach': 'left',
+                'scale': 0.7,
+                'position': (25, 40),
+                'color': (0.7,0.7,0.7)
+            })
+
+ 
+    def _setup_center_messages(self):
+        self.messages = [
+            u'\ue047Welcome to ---|Pixel|--- epic teams\ue047',
+            u'\ue02cFor paid or free adminship join discord\n use /contact for owner details\ue02c',
+            u'\ue043Use /me for your kills, deaths and matches playes\ue043',
+            u'\ue048 Click via status button to join discord server and get free temp vip and admin\ue048',
+            u"\ue042Don't spamm here chat filter and chatlogger is loaded\ue042",
+            u'Thanks for playing we hope you enjoy here \ue047',
+        ]
+        self.count=0
+
+        self.center_node = bs.newnode('text',
+            attrs={
+                'text': self.messages[self.count],
+                'flatness': 0.4,
+                'h_align': 'center',
+                'v_attach': 'bottom',
+                'scale': 1.2,
+                'position': (0, 100),
+                'color': (1,1,1)})
+
+        # Animate color loop
+        bs.animate_array(
+            self.center_node,
+            'color',
+            3,
+            {
+                0: (1, 0, 0),
+                3: (0, 1, 0),
+                6: (0, 0, 1),
+                9: (1, 0, 0),
+            },
+            loop=True,
+        )
+
+        # Timer to update the message every 60 seconds
+        bs.timer(60.0, self._update_center_message, repeat=True)
+
+    def _update_center_message(self):
+        if self.count==5:
+            self.count=0
+        else:
+            self.count+=1
+        self.center_node.text = self.messages[self.count]
+
+--- Chunk 3 ---
+Hello this is a test chunk.
+--- Chunk 4 ---
+import re
+import babase
+import _babase
+import badwords
+# Configs
+LOG_FILE = "Filter_Chat_Log.txt"
+ADMINS=['pb-IF4pU2JeDg==']
+MAX_WARNINGS = 3
+
+
+# --- Load bad words ---
+def load_badwords():
+    try:
+        return set(badwords.words.strip().lower())
+    except Exception as e:
+        babase.print_error(f"[ProfanityFilter] Failed to load badwords: {e}")
+        return set()
+
+BADWORDS = load_badwords()
+WORD_RE = re.compile(r'\W+')
+
+# --- Logger ---
+def log_violation(name, account_id, message, level):
+    try:
+        with open(LOG_FILE, 'a', encoding='utf-8') as f:
+            f.write(f"[{level}] {name} ({account_id}): {message}\n")
+    except Exception as e:
+        babase.print_error(f"[ProfanityFilter] Failed to write log: {e}")
+
+# --- Warning Manager Class ---
+class PlayerWarningManager:
+    def __init__(self):
+        self._warnings = {}
+
+    def add_warning(self, account_id):
+        self._warnings.setdefault(account_id, 0)
+        self._warnings[account_id] += 1
+        return self._warnings[account_id]
+
+    def get_warning_count(self, account_id):
+        return self._warnings.get(account_id, 0)
+
+    def reset(self, account_id):
+        if account_id in self._warnings:
+            del self._warnings[account_id]
+
+warning_manager = PlayerWarningManager()
+
+# --- Main Chat Filter ---
+def on_chat_message(msg,client_id,account_id,name):
+    try:
+        msg_text = msg.lower()
+        words = set(WORD_RE.sub(' ', msg_text).split())
+
+        if account_id in ADMINS:
+            return  True
+
+        if words & BADWORDS:
+            count = warning_manager.add_warning(account_id)
+            log_violation(name, account_id, msg_text, f"WARNING {count}")
+
+            if count >= MAX_WARNINGS:
+                babase.screenmessage(f"\U0001F6AB {name} kicked for offensive language.", color=(1, 0, 0))
+                _babase.disconnect_client(client_id)
+                warning_manager.reset(account_id)
+            else:
+                babase.screenmessage(
+                    f"\u26A0 {name}, warning {count}/{MAX_WARNINGS} for language.",
+                    color=(1, 1, 0)
+                )
+        else:
+            return True
+        
+
+    except Exception as e:
+        babase.print_error(f"[ProfanityFilter] Error handling chat: {e}")
+        return True
+
+--- Chunk 5 ---
+words="aand aandu balatkar balatkari behen chod beti chod bhadva bhadve bhandve bhangi bhootni ke bhosad bhosadi ke boobe chakke chinaal chinki chod chodu chodu bhagat chooche choochi choope choot choot ke baal chootia chootiya chuche chuchi chudaap chudai khanaa chudam chudai chude chut chut ka chuha chut ka churan chut ka mail chut ke baal chut ke dhakkan chut maarli chutad chutadd chutan chutia chutiya gaand gaandfat gaandmasti gaandufad gandfattu gandu gashti gasti ghassa ghasti gucchi gucchu harami haramzade hawas hawas ke pujari hijda hijra jhant jhant chaatu jhant ka keeda jhant ke baal jhant ke pissu jhantu kamine kaminey kanjar kutta kutta kamina kutte ki aulad kutte ki jat kuttiya loda lodu lund lund choos lund ka bakkal lund khajoor lundtopi lundure maa ki chut maal madar chod madarchod madhavchod mooh mein le mutth mutthal najayaz najayaz aulaad najayaz paidaish paki pataka patakha raand randaap randi randi rona saala saala kutta saali kutti saali randi suar suar ke lund suar ki aulad tatte tatti teri maa ka bhosada teri maa ka boba chusu teri maa ki behenchod  teri maa ki chut tharak tharki tu chuda 2g1c 2 girls 1 cup acrotomophilia alabama hot pocket alaskan pipeline anal anilingus anus apeshit arsehole ass asshole assmunch auto erotic autoerotic babeland baby batter baby juice ball gag ball gravy ball kicking ball licking ball sack ball sucking bangbros bangbus bareback barely legal barenaked bastard bastardo bastinado bbw bdsm beaner beaners beaver cleaver beaver lips beastiality bestiality big black big breasts big knockers big tits bimbos birdlock bitch bitches black cock blonde action blonde on blonde action blowjob blow job blow your load blue waffle blumpkin bollocks bondage boner boob boobs booty call brown showers brunette action bukkake bulldyke bullet vibe bullshit bung hole bunghole busty butt buttcheeks butthole camel toe camgirl camslut camwhore carpet muncher carpetmuncher chocolate rosebuds cialis circlejerk cleveland steamer clit clitoris clover clamps clusterfuck cock cocks coprolagnia coprophilia cornhole coon coons creampie cum cumming cumshot cumshots cunnilingus cunt darkie date rape daterape deep throat deepthroat dendrophilia dick dildo dingleberry dingleberries dirty pillows dirty sanchez doggie style doggiestyle doggy style doggystyle dog style dolcett domination dominatrix dommes donkey punch double dong double penetration dp action dry hump dvda eat my ass ecchi ejaculation erotic erotism escort eunuch fag faggot fecal felch fellatio feltch female squirting femdom figging fingerbang fingering fisting foot fetish footjob frotting fuck fuck buttons fuckin fucking fucktards fudge packer fudgepacker futanari gangbang gang bang gay sex genitals giant cock girl on girl on top girls gone wild goatcx goatse god damn gokkun golden shower goodpoop goo girl goregasm grope group sex g-spot guro hand job handjob hard core hardcore hentai homoerotic honkey hooker horny hot carl hot chick how to kill how to murder huge fat humping incest intercourse jack off jail bait jailbait jelly donut jerk off jigaboo jiggaboo jiggerboo jizz juggs kike kinbaku kinkster kinky knobbing leather restraint leather straight jacket lemon party livesex lolita lovemaking make me come male squirting masturbate masturbating masturbation menage a trois milf missionary position mong motherfucker mound of venus mr hands muff diver muffdiving nambla nawashi negro neonazi nigga nigger nig nog nimphomania nipple nipples nsfw nsfw images nude nudity nutten nympho nymphomania octopussy omorashi one cup two girls one guy one jar orgasm orgy paedophile paki panties panty pedobear pedophile pegging penis phone sex piece of shit pikey pissing piss pig pisspig playboy pleasure chest pole smoker ponyplay poof poon poontang punany poop chute poopchute porn porno pornography prince albert piercing pthc pubes pussy queaf queef quim raghead raging boner rape raping rapist rectum reverse cowgirl rimjob rimming rosy palm rosy palm and her 5 sisters rusty trombone sadism santorum scat schlong scissoring semen sex sexcam sexo sexy sexual sexually sexuality shaved beaver shaved pussy shemale shibari shit shitblimp shitty shota shrimping skeet slanteye slut s&m smut snatch snowballing sodomize sodomy spastic spic splooge splooge moose spooge spread legs spunk strap on strapon strappado strip club style doggy suck sucks suicide girls sultry women swastika swinger tainted love taste my tea bagging
+
+===== REAL-TIME WEB RESULTS =====
+
+--- Web Result 1 ---
+Title: SpaceX Starship makes historic landing
+Link: https://www.space.com/spacex-starship
+Snippet: SpaceX's Starship rocket has successfully completed its test flight and landed smoothly in the ocean.
+
+--- Web Result 2 ---
+Title: Elon Musk announces new Starship goals
+Link: https://www.theverge.com/elon-musk-starship-goals
+Snippet: Elon Musk says the next generation of Starship will aim for even faster turnaround times.
+
+--- Web Result 3 ---
+Title: Starship launch window opens next week
+Link: https://www.nasaspaceflight.com/starship-next-launch
+Snippet: The FAA has approved the next launch license for SpaceX, targeting a launch window early next week.
+
+---User Query---
+What is the latest news on SpaceX Starship?
+
+---Answer---
