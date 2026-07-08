@@ -21,6 +21,8 @@ def generate_text(system_prompt: str, user_prompt: str, model_name: str = "gpt-4
     if model_name == "mock":
         if "Extract keywords" in user_prompt:
             return '{"low_level": ["topic", "documents"], "high_level": ["main concept"]}'
+        elif "Are these the exact same entity?" in user_prompt:
+            return "YES"
         else:
             return "This is a mock answer based on the provided context."
             

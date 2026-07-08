@@ -39,7 +39,7 @@ load_dotenv()
 # ──────────────────────────────────────────────
 class AragCompleter(Completer):
     def __init__(self, available_models):
-        self.commands = ['/mount', '/model', '/serve', '/query', '/quit', '/exit']
+        self.commands = ['/mount', '/model', '/serve', '/query', '/dedup', '/quit', '/exit']
         self.models = available_models
 
     def get_completions(self, document, complete_event):
@@ -102,6 +102,7 @@ def main():
         "  /mount <folder> - Ingest documents from a folder\n"
         "  /model <name>   - Change the extraction LLM model\n"
         "  /query <text>   - Ask a question using the Dual-Search Query Engine\n"
+        "  /dedup          - Run Native Deduplication on the graph\n"
         "  /serve          - Start the 3D Graph Web UI\n"
         "  /quit           - Exit the CLI\n\n"
     )
@@ -384,9 +385,17 @@ def main():
                             print(f"Failed to start server: {e}")
                     else:
                         print("\n[!] Web Server is already running on http://localhost:8000\n")
+                elif command == '/dedup':
+                    from engine.dedup import run_deduplication
+                    print("\n[Running Native Deduplication (Fuzzy Match >= 95%)...]")
+                    try:
+                        merge_count = run_deduplication(state["graph_store"], threshold=95)
+                        print(f"\n[Deduplication Complete] Merged {merge_count} duplicate entities.\n")
+                    except Exception as e:
+                        print(f"\n[Deduplication Failed]: {e}\n")
 
                 else:
-                    print(f"Unknown command. Try '/mount <folder>', '/query <text>', '/model <name>', '/serve', or '/quit'.\n")
+                    print(f"Unknown command. Try '/mount <folder>', '/query <text>', '/model <name>', '/dedup', '/serve', or '/quit'.\n")
 
         except Exception as e:
             output_queue.put(f"\n[CRITICAL ERROR]: {e}\n")

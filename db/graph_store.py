@@ -59,6 +59,50 @@ class GraphStore:
                 description=description.strip()
             )
 
+    def find_duplicate_candidates(self, threshold=95):
+        from rapidfuzz import fuzz, utils
+        nodes = list(self.graph.nodes(data=True))
+        candidates = []
+        for i in range(len(nodes)):
+            for j in range(i + 1, len(nodes)):
+                id1, data1 = nodes[i]
+                id2, data2 = nodes[j]
+                
+                name1 = data1.get("name", id1)
+                name2 = data2.get("name", id2)
+                
+                score = fuzz.token_sort_ratio(name1, name2, processor=utils.default_process)
+                if score >= threshold:
+                    candidates.append((id1, id2, score))
+                    
+        candidates.sort(key=lambda x: x[2], reverse=True)
+        return candidates
+
+    def merge_nodes(self, keep_id: str, merge_id: str):
+        if not self.graph.has_node(keep_id) or not self.graph.has_node(merge_id):
+            return
+            
+        keep_data = self.graph.nodes[keep_id]
+        merge_data = self.graph.nodes[merge_id]
+        
+        # Merge descriptions
+        desc1 = keep_data.get("description", "")
+        desc2 = merge_data.get("description", "")
+        if desc2 and desc2 not in desc1:
+            keep_data["description"] = (desc1 + "\n---\n" + desc2).strip()
+            
+        # Redirect incoming edges
+        for u, v, data in list(self.graph.in_edges(merge_id, data=True)):
+            if u != keep_id:
+                self.upsert_relation(u, keep_id, data.get("keywords", ""), data.get("description", ""))
+                
+        # Redirect outgoing edges
+        for u, v, data in list(self.graph.out_edges(merge_id, data=True)):
+            if v != keep_id:
+                self.upsert_relation(keep_id, v, data.get("keywords", ""), data.get("description", ""))
+                
+        self.graph.remove_node(merge_id)
+
     def save_to_disk(self):
         os.makedirs(os.path.dirname(os.path.abspath(self.storage_path)), exist_ok=True)
         nx.write_graphml(self.graph, self.storage_path)
