@@ -11,6 +11,9 @@ import queue as queue_module
 import hashlib
 import textwrap
 
+# Add src to Python path so internal module imports resolve correctly
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
+
 from dotenv import load_dotenv
 from classifier.main import classify_heuristic
 from pathlib import Path
