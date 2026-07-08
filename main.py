@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import tiktoken
+import subprocess
 from dotenv import load_dotenv
 from classifier import classify_text
 from model.extractor import extract_entities
@@ -11,20 +12,26 @@ from db.graph_store import GraphStore
 load_dotenv()
 
 from prompt_toolkit import PromptSession
-from prompt_toolkit.auto_suggest import AutoSuggest, Suggestion
+from prompt_toolkit.completion import Completer, Completion
 
-class CommandSuggest(AutoSuggest):
-    def __init__(self, commands):
-        self.commands = commands
+class AragCompleter(Completer):
+    def __init__(self, available_models):
+        self.commands = ['/mount', '/model', '/serve', '/quit', '/exit']
+        self.models = available_models
         
-    def get_suggestion(self, buffer, document):
-        text = document.text
-        if not text:
-            return None
-        for cmd in self.commands:
-            if cmd.startswith(text) and cmd != text:
-                return Suggestion(cmd[len(text):])
-        return None
+    def get_completions(self, document, complete_event):
+        text = document.text_before_cursor
+        
+        parts = text.split(' ')
+        if len(parts) == 1:
+            for cmd in self.commands:
+                if cmd.startswith(text):
+                    yield Completion(cmd, start_position=-len(text))
+        elif len(parts) == 2 and parts[0] == '/model':
+            word = parts[1]
+            for m in self.models:
+                if m.startswith(word):
+                    yield Completion(m, start_position=-len(word))
 
 # Enable ANSI escape sequences on Windows
 if os.name == 'nt':
@@ -63,9 +70,13 @@ def main():
         print("Available commands:")
         print("  /mount <folder> - Ingest documents from a folder")
         print("  /model <name>   - Change the extraction LLM model")
+        print("  /serve          - Start the 3D Graph Web UI")
         print("  /quit           - Exit the CLI\n")
         
-        session = PromptSession(auto_suggest=CommandSuggest(['/mount ', '/model ', '/quit', '/exit']))
+        session = PromptSession(
+            completer=AragCompleter(available_models),
+            complete_while_typing=True
+        )
         
         while True:
             try:
@@ -155,8 +166,17 @@ def main():
                     for m in available_models:
                         print(f"  - {m}")
                     print("Usage: /model <model_name>\n")
+            elif command == '/serve':
+                print("\n[Starting Web Server on http://localhost:8000]")
+                print("Press Ctrl+C to stop the server and return to CLI.\n")
+                try:
+                    # Launch uvicorn
+                    subprocess.run([sys.executable, "-m", "uvicorn", "web.server:app", "--host", "0.0.0.0", "--port", "8000"])
+                except KeyboardInterrupt:
+                    pass
+                print("\n[Server stopped]\n")
             else:
-                print(f"Unknown command. Try '/mount <folder>', '/model <name>', or '/quit'.\n")
+                print(f"Unknown command. Try '/mount <folder>', '/model <name>', '/serve', or '/quit'.\n")
     finally:
         # Guarantee we restore the terminal even if it crashes
         exit_alt_screen()

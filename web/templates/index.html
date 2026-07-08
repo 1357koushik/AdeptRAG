@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AdeptRAG Knowledge Graph</title>
+    <!-- Stable 2D Graph Library -->
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0b0f19;
+            color: #ffffff;
+            font-family: 'Inter', -apple-system, sans-serif;
+            overflow: hidden;
+        }
+        #graph-container {
+            width: 100vw;
+            height: 100vh;
+        }
+        #overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(15, 23, 42, 0.85);
+            padding: 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 300px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            z-index: 10;
+        }
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 20px;
+            font-weight: 600;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        p {
+            margin: 0 0 15px 0;
+            font-size: 13px;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .stat-box {
+            display: flex;
+            flex-direction: column;
+        }
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #e2e8f0;
+        }
+        .stat-label {
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Custom Tooltip Styling for vis.js */
+        div.vis-tooltip {
+            position: absolute;
+            background: rgba(15, 23, 42, 0.95) !important;
+            border: 2px solid rgba(255, 255, 255, 0.2) !important;
+            border-radius: 10px !important;
+            padding: 10px 15px !important;
+            color: #ffffff !important;
+            font-family: 'Inter', sans-serif !important;
+            font-size: 13px !important;
+            font-weight: bold !important;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8) !important;
+            pointer-events: none;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div id="overlay">
+        <h1>AdeptRAG Graph</h1>
+        <p>Interactive 2D visualization of extracted entities and relationships.</p>
+        <p><i>Drag to pan, scroll to zoom. Hover over nodes to see their type. Drag nodes to reshape the graph.</i></p>
+        <div class="stats">
+            <div class="stat-box">
+                <span class="stat-value" id="node-count">-</span>
+                <span class="stat-label">Nodes</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-value" id="edge-count">-</span>
+                <span class="stat-label">Edges</span>
+            </div>
+        </div>
+    </div>
+    
+    <div id="graph-container"></div>
+
+    <script>
+        // Premium color palette for different entity groups
+        const colorPalette = [
+            '#60a5fa', // Blue
+            '#f472b6', // Pink
+            '#34d399', // Emerald
+            '#a78bfa', // Violet
+            '#fbbf24', // Amber
+            '#f87171', // Red
+            '#38bdf8', // Sky
+            '#a3e635'  // Lime
+        ];
+
+        // Hash function to assign consistent colors to strings (groups)
+        function getGroupColor(groupStr) {
+            let hash = 0;
+            for (let i = 0; i < groupStr.length; i++) {
+                hash = groupStr.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return colorPalette[Math.abs(hash) % colorPalette.length];
+        }
+
+        fetch('/api/graph')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('node-count').innerText = data.nodes.length;
+                document.getElementById('edge-count').innerText = data.links.length;
+
+                // Map data to vis.js format
+                const visNodes = data.nodes.map(node => {
+                    const color = getGroupColor(node.group);
+                    return {
+                        id: node.id,
+                        label: node.name,
+                        title: node.group, // This becomes the hover tooltip
+                        color: {
+                            background: color,
+                            border: 'rgba(255,255,255,0.8)',
+                            highlight: {
+                                background: color,
+                                border: '#ffffff'
+                            },
+                            hover: {
+                                background: color,
+                                border: '#ffffff'
+                            }
+                        },
+                        font: {
+                            color: '#ffffff',
+                            face: 'Inter',
+                            size: 14,
+                            strokeWidth: 2,
+                            strokeColor: '#0b0f19' // Text outline for readability
+                        },
+                        shape: 'dot',
+                        size: 15
+                    };
+                });
+
+                const visEdges = data.links.map(link => {
+                    return {
+                        from: link.source,
+                        to: link.target,
+                        label: link.label,
+                        title: link.description || link.label, // Hover tooltip
+                        color: {
+                            color: 'rgba(255, 255, 255, 0.4)',
+                            highlight: 'rgba(255, 255, 255, 0.9)',
+                            hover: 'rgba(255, 255, 255, 0.7)'
+                        },
+                        font: {
+                            color: '#a78bfa',
+                            face: 'Inter',
+                            size: 11,
+                            strokeWidth: 0,
+                            align: 'top'
+                        },
+                        arrows: {
+                            to: {
+                                enabled: true,
+                                scaleFactor: 0.5
+                            }
+                        },
+                        smooth: {
+                            type: 'continuous'
+                        }
+                    };
+                });
+
+                const container = document.getElementById('graph-container');
+                const graphData = {
+                    nodes: new vis.DataSet(visNodes),
+                    edges: new vis.DataSet(visEdges)
+                };
+                const options = {
+                    interaction: {
+                        hover: true,
+                        tooltipDelay: 100,
+                        zoomView: true,
+                        dragView: true
+                    },
+                    physics: {
+                        enabled: true,
+                        barnesHut: {
+                            gravitationalConstant: -2000,
+                            centralGravity: 0.1,
+                            springLength: 150,
+                            springConstant: 0.05,
+                            damping: 0.09
+                        },
+                        stabilization: {
+                            enabled: true,
+                            iterations: 1000
+                        }
+                    }
+                };
+
+                // Initialize network
+                const network = new vis.Network(container, graphData, options);
+
+                // Add zoom boundaries similar to before
+                network.on("zoom", function() {
+                    const scale = network.getScale();
+                    if (scale < 0.1) {
+                        network.moveTo({ scale: 0.1 });
+                    } else if (scale > 4.0) {
+                        network.moveTo({ scale: 4.0 });
+                    }
+                });
+            })
+            .catch(err => console.error("Failed to load graph data:", err));
+    </script>
+</body>
+</html>
