@@ -12,7 +12,8 @@ import hashlib
 import textwrap
 
 from dotenv import load_dotenv
-from classifier import classify_text
+from classifier.main import classify_heuristic
+from pathlib import Path
 from model.extractor import extract_entities
 from db.graph_store import GraphStore
 from db.vector_store import VectorStore
@@ -291,10 +292,9 @@ def main():
                                                 text=chunk_text,
                                                 metadata={"file": file, "chunk_index": chunk_idx}
                                             )
-                                            result_json = classify_text(chunk_text)
-                                            result = json.loads(result_json)
-                                            label = result.get('label', 'Uncertain')
-                                            if label == 'Data Dump':
+                                            result = classify_heuristic(chunk_text, Path(filepath))
+                                            label = result.get('label', 'USEFUL')
+                                            if label == 'NOT_USEFUL':
                                                 print(f"- {file} (Chunk {chunk_idx}): Saved to VectorDB | Dump Data (Skipping LLM)")
                                             else:
                                                 print(f"- {file} (Chunk {chunk_idx}): Saved to VectorDB | Useful -> Extracting with {state['current_model']}...")
