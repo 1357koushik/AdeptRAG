@@ -1,4 +1,5 @@
 import os
+import time
 from openai import OpenAI
 from anthropic import Anthropic
 from google import genai
@@ -75,58 +76,86 @@ def extract_entities(chunk_text: str, model_name: str = "gpt-4o-mini") -> list[d
         {"role": "user", "content": ENTITY_EXTRACTION_USER_PROMPT.format(input_text=chunk_text)}
     ]
     
-    try:
-        content = ""
-        
-        if model_name.startswith("gpt-"):
-            client = OpenAI()
-            response = client.chat.completions.create(
-                model=model_name,
-                messages=messages,
-                temperature=0.0
-            )
-            content = response.choices[0].message.content
+    max_retries = 3
+    base_delay = 2
+    
+    for attempt in range(max_retries):
+        try:
+            content = ""
             
-        elif model_name.startswith("claude-"):
-            client = Anthropic()
-            response = client.messages.create(
-                model=model_name,
-                system=ENTITY_EXTRACTION_SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": ENTITY_EXTRACTION_USER_PROMPT.format(input_text=chunk_text)}],
-                temperature=0.0,
-                max_tokens=4096
-            )
-            content = response.content[0].text
-            
-        elif model_name.startswith("gemini-"):
-            client = genai.Client()
-            response = client.models.generate_content(
-                model=model_name,
-                contents=ENTITY_EXTRACTION_USER_PROMPT.format(input_text=chunk_text),
-                config=genai.types.GenerateContentConfig(
-                    system_instruction=ENTITY_EXTRACTION_SYSTEM_PROMPT,
+            if model_name.startswith("gpt-"):
+                client = OpenAI(timeout=20.0)
+                response = client.chat.completions.create(
+                    model=model_name,
+                    messages=messages,
                     temperature=0.0
                 )
-            )
-            content = response.text
-            
-        elif model_name.startswith("ollama/"):
-            actual_model = model_name.replace("ollama/", "")
-            client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
-            response = client.chat.completions.create(
-                model=actual_model,
-                messages=messages,
-                temperature=0.0
-            )
-            content = response.choices[0].message.content
-        else:
-            raise ValueError(f"Unsupported model prefix for {model_name}")
+                content = response.choices[0].message.content
+                
+            elif model_name.startswith("claude-"):
+                client = Anthropic(timeout=20.0)
+                response = client.messages.create(
+                    model=model_name,
+                    system=ENTITY_EXTRACTION_SYSTEM_PROMPT,
+                    messages=[{"role": "user", "content": ENTITY_EXTRACTION_USER_PROMPT.format(input_text=chunk_text)}],
+                    temperature=0.0,
+                    max_tokens=4096
+                )
+                content = response.content[0].text
+                
+            elif model_name.startswith("gemini-"):
+                client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=ENTITY_EXTRACTION_USER_PROMPT.format(input_text=chunk_text),
+                    config=genai.types.GenerateContentConfig(
+                        system_instruction=ENTITY_EXTRACTION_SYSTEM_PROMPT,
+                        temperature=0.0
+                    )
+                )
+                content = response.text
+                
+            elif model_name.startswith("ollama/"):
+                actual_model = model_name.replace("ollama/", "")
+                client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama", timeout=20.0)
+                response = client.chat.completions.create(
+                    model=actual_model,
+                    messages=messages,
+                    temperature=0.0
+                )
+                content = response.choices[0].message.content
+            else:
+                raise ValueError(f"Unsupported model prefix for {model_name}")
 
-        return parse_extraction_output(content)
-        
-    except Exception as e:
-        print(f"Error during LLM extraction ({model_name}): {e}")
-        return []
+            return parse_extraction_output(content)
+            
+        except Exception as e:
+            error_str = str(e).lower()
+            
+            # Fail fast on non-recoverable errors (invalid API key, out of credits, unsupported model)
+            if any(err in error_str for err in ["insufficient_quota", "invalid_api_key", "authentication", "unsupported", "not found", "missing credentials"]):
+                print(f"  [X] Fatal API Error ({model_name}): {e}")
+                print(f"      -> Skipping retries. Please check your API key and billing status.")
+                return []
+                
+            if attempt == max_retries - 1:
+                print(f"  [X] Error during LLM extraction ({model_name}) after {max_retries} attempts: {e}")
+                return []
+                
+            delay = base_delay * (2 ** attempt)
+            import sys
+            
+            error_msg = str(e).splitlines()[0][:100] if str(e) else "Unknown Error"
+            print(f"  [!] API Error [{type(e).__name__}]: {error_msg}")
+            
+            # Safe cross-platform live countdown loop
+            sys.stdout.write(f"      Waiting before attempt {attempt + 2}/{max_retries}: ")
+            sys.stdout.flush()
+            for remaining in range(delay, 0, -1):
+                sys.stdout.write(f"{remaining}.. ")
+                sys.stdout.flush()
+                time.sleep(1)
+            print() # Newline after countdown finishes
 
 def parse_extraction_output(llm_output: str) -> list[dict]:
     """

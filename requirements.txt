@@ -10,3 +10,4 @@ google-genai
 fastapi
 uvicorn
 jinja2
+chromadb

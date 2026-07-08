@@ -4,9 +4,11 @@ import json
 import tiktoken
 import subprocess
 from dotenv import load_dotenv
+import hashlib
 from classifier import classify_text
 from model.extractor import extract_entities
 from db.graph_store import GraphStore
+from db.vector_store import VectorStore
 
 # Load environment variables (API keys)
 load_dotenv()
@@ -58,11 +60,13 @@ def main():
             "gpt-4o", 
             "claude-3-5-sonnet-20240620", 
             "gemini-2.5-flash-lite", 
+            "gemini-3.1-flash-lite",
             "ollama/llama3", 
             "ollama/mistral-nemo"
         ]
         
         graph_store = GraphStore()
+        vector_store = VectorStore()
         
         print("==================================================")
         print("            AdeptRAG Interactive CLI              ")
@@ -119,16 +123,26 @@ def main():
                                     for i in range(0, len(tokens), chunk_size - chunk_overlap):
                                         chunk_tokens = tokens[i:i + chunk_size]
                                         chunk_text = enc.decode(chunk_tokens)
+                                        chunk_idx = i // (chunk_size - chunk_overlap) + 1
                                         
+                                        # 1. Save chunk to Vector Database
+                                        chunk_id = hashlib.md5(f"{file}_{chunk_idx}_{chunk_text[:50]}".encode('utf-8')).hexdigest()
+                                        vector_store.upsert_chunk(
+                                            chunk_id=chunk_id,
+                                            text=chunk_text,
+                                            metadata={"file": file, "chunk_index": chunk_idx}
+                                        )
+                                        
+                                        # 2. Classify chunk for Knowledge Graph extraction
                                         result_json = classify_text(chunk_text)
                                         result = json.loads(result_json)
                                         
                                         label = result.get('label', 'Uncertain')
                                         
                                         if label == 'Data Dump':
-                                            print(f"- {file} (Chunk {i // (chunk_size - chunk_overlap) + 1}): Dump Data (Skipping LLM)")
+                                            print(f"- {file} (Chunk {chunk_idx}): Saved to VectorDB | Dump Data (Skipping LLM)")
                                         else:
-                                            print(f"- {file} (Chunk {i // (chunk_size - chunk_overlap) + 1}): Useful -> Extracting with {current_model}...")
+                                            print(f"- {file} (Chunk {chunk_idx}): Saved to VectorDB | Useful -> Extracting with {current_model}...")
                                             extracted = extract_entities(chunk_text, current_model)
                                             entities_count = sum(1 for e in extracted if e['type'] == 'entity')
                                             relations_count = sum(1 for e in extracted if e['type'] == 'relation')
