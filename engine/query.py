@@ -75,9 +75,9 @@ class QueryEngine:
             # Fallback
             return {"low_level": [query], "high_level": [], "requires_web_search": False}
 
-    def _build_query_context(self, keywords: dict, query: str) -> str:
-        """Retrieves data from both Vector and Graph stores and formats it into a context string."""
-        print("[QueryEngine] Building context from VectorDB and GraphDB...")
+    def _build_query_context(self, keywords: dict, query: str, mode: str = "mix") -> str:
+        """Retrieves data from both Vector and Graph stores and formats it into a context string based on mode."""
+        print(f"[QueryEngine] Building context in {mode} mode...")
         
         low_level = keywords.get("low_level", [])
         high_level = keywords.get("high_level", [])
@@ -88,26 +88,37 @@ class QueryEngine:
         vector_results = self.vector_store.search_chunks(query=search_query, n_results=5)
         
         text_chunks = []
-        if vector_results and "documents" in vector_results and vector_results["documents"]:
-            text_chunks = vector_results["documents"][0]
+        if mode in ["naive", "mix", "hybrid"]:
+            search_query = query + " " + " ".join(low_level + high_level)
+            vector_results = self.vector_store.search_chunks(query=search_query, n_results=5)
+            
+            if vector_results and "documents" in vector_results and vector_results["documents"]:
+                text_chunks = vector_results["documents"][0]
             
         # 2. Graph Store Search
         graph_nodes = []
         graph_edges = []
         
-        # Look for nodes that match low-level keywords (exact or substring)
-        matched_nodes = set()
-        for kw in low_level:
-            kw_lower = kw.lower()
-            for node_id, data in self.graph_store.graph.nodes(data=True):
-                # Match by node ID or name
-                if kw_lower in str(node_id).lower() or kw_lower in str(data.get("name", "")).lower():
-                    matched_nodes.add(node_id)
-                    
-        # Extract node descriptions and connected edges
-        for node in matched_nodes:
-            data = self.graph_store.graph.nodes[node]
-            graph_nodes.append(f"Entity: {data.get('name', node)} ({data.get('entity_type', 'Unknown')})\nDescription: {data.get('description', '')}")
+        if mode in ["local", "global", "mix", "hybrid"]:
+            search_keywords = []
+            if mode in ["local", "mix", "hybrid"]:
+                search_keywords.extend(low_level)
+            if mode in ["global", "mix", "hybrid"]:
+                search_keywords.extend(high_level)
+                
+            # Look for nodes that match keywords (exact or substring)
+            matched_nodes = set()
+            for kw in search_keywords:
+                kw_lower = kw.lower()
+                for node_id, data in self.graph_store.graph.nodes(data=True):
+                    # Match by node ID or name
+                    if kw_lower in str(node_id).lower() or kw_lower in str(data.get("name", "")).lower():
+                        matched_nodes.add(node_id)
+                        
+            # Extract node descriptions and connected edges
+            for node in matched_nodes:
+                data = self.graph_store.graph.nodes[node]
+                graph_nodes.append(f"Entity: {data.get('name', node)} ({data.get('entity_type', 'Unknown')})\nDescription: {data.get('description', '')}")
             
             # Get edges (both outgoing and incoming)
             # Outgoing
@@ -168,7 +179,7 @@ class QueryEngine:
             print(f"  [!] Web search failed: {e}")
             return ""
 
-    def query(self, user_query: str) -> tuple[str, str]:
+    def query(self, user_query: str, mode: str = "mix") -> tuple[str, str]:
         """Executes the full dual-search RAG pipeline."""
         # 1. Keyword Extraction
         keywords = self.get_keywords_from_query(user_query)
@@ -176,7 +187,7 @@ class QueryEngine:
         requires_web = keywords.get("requires_web_search", False)
         
         # 2. Context Building
-        context_string = self._build_query_context(keywords, user_query)
+        context_string = self._build_query_context(keywords, user_query, mode)
         
         if not context_string.strip():
             print("  [!] Warning: No relevant context found in VectorDB or GraphDB.")

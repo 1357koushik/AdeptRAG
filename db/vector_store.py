@@ -41,3 +41,11 @@ class VectorStore:
             n_results=n_results
         )
         return results
+
+    def remove_by_file(self, filename: str):
+        """Removes all chunks associated with a specific file from the vector store."""
+        try:
+            self.collection.delete(where={"file": filename})
+            print(f"  [VectorStore] Removed all chunks for {filename}")
+        except Exception as e:
+            print(f"  [VectorStore] Failed to remove chunks for {filename}: {e}")

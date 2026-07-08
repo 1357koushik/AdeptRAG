@@ -39,7 +39,7 @@ load_dotenv()
 # ──────────────────────────────────────────────
 class AragCompleter(Completer):
     def __init__(self, available_models):
-        self.commands = ['/mount', '/model', '/serve', '/query', '/dedup', '/quit', '/exit']
+        self.commands = ['/mount', '/unmount', '/model', '/serve', '/query', '/dedup', '/quit', '/exit']
         self.models = available_models
 
     def get_completions(self, document, complete_event):
@@ -100,8 +100,9 @@ def main():
         "==================================================\n"
         "Available commands:\n"
         "  /mount <folder> - Ingest documents from a folder\n"
+        "  /unmount <file> - Remove a document and clean up its graph/vector entries\n"
         "  /model <name>   - Change the extraction LLM model\n"
-        "  /query <text>   - Ask a question using the Dual-Search Query Engine\n"
+        "  /query [--mode mode] <text> - Query using mode: mix (default), naive, local, global\n"
         "  /dedup          - Run Native Deduplication on the graph\n"
         "  /serve          - Start the 3D Graph Web UI\n"
         "  /quit           - Exit the CLI\n\n"
@@ -304,11 +305,11 @@ def main():
                                                 for item in extracted:
                                                     if item['type'] == 'entity':
                                                         state["graph_store"].upsert_entity(
-                                                            item['name'], item.get('entity_type', ''), item.get('description', ''))
+                                                            item['name'], item.get('entity_type', ''), item.get('description', ''), source_file=file)
                                                         print(f"     [Entity] {item['name']} ({item.get('entity_type', '')})")
                                                     elif item['type'] == 'relation':
                                                         state["graph_store"].upsert_relation(
-                                                            item['source'], item['target'], item.get('keywords', ''), item.get('description', ''))
+                                                            item['source'], item['target'], item.get('keywords', ''), item.get('description', ''), source_file=file)
                                                         print(f"     [Relation] {item['source']} -> {item['target']} ({item.get('keywords', '')})")
                                     except Exception as e:
                                         print(f"  Skipping {file}: {e}")
@@ -322,13 +323,39 @@ def main():
                 elif command == '/mount':
                     print("Usage: /mount <folder_path>\n")
 
+                elif command.startswith('/unmount '):
+                    filename = user_input[9:].strip()
+                    if filename:
+                        print(f"\n[Unmounting file: {filename}...]")
+                        state["vector_store"].remove_by_file(filename)
+                        state["graph_store"].remove_by_file(filename)
+                        state["graph_store"].save_to_disk()
+                        print("\n[Unmount complete]\n")
+                    else:
+                        print("Usage: /unmount <filename>\n")
+
+                elif command == '/unmount':
+                    print("Usage: /unmount <filename>\n")
+
                 elif command.startswith('/query '):
-                    query_text = user_input[7:].strip()
+                    args_text = user_input[7:].strip()
+                    mode = "mix"
+                    
+                    if args_text.startswith('--mode'):
+                        parts = args_text.split(maxsplit=2)
+                        if len(parts) >= 3:
+                            mode = parts[1]
+                            query_text = parts[2]
+                        else:
+                            query_text = ""
+                    else:
+                        query_text = args_text
+
                     if query_text:
                         engine = QueryEngine(state["vector_store"], state["graph_store"], state["current_model"])
-                        print(f"\n[Querying with {state['current_model']}]")
+                        print(f"\n[Querying with {state['current_model']}, Mode: {mode}]")
                         try:
-                            answer, debug_prompt = engine.query(query_text)
+                            answer, debug_prompt = engine.query(query_text, mode=mode)
                         except Exception as qe:
                             # Write raw error to a debug file so we can see it outside TUI
                             with open("arag_debug.log", "a") as df:
