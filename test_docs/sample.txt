@@ -1,2 +1,0 @@
-Guido van Rossum is a Dutch programmer best known as the creator of the Python programming language.
-Python is widely used in data science and machine learning.

@@ -1,184 +1,0 @@
-==================================================                             ^
-            AdeptRAG Interactive CLI                                            
-==================================================                              
-Available commands:                                                             
-  /mount <folder> - Ingest documents from a folder                              
-  /model <name>   - Change the extraction LLM model                             
-  /query <text>   - Ask a question using the Dual-Search Query Engine           
-  /serve          - Start the 3D Graph Web UI                                   
-  /quit           - Exit the CLI                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                                                                                              v
--------------------------------------------------------------------------------                                                                               -
-arag>      arag> /query test
-
-[Querying with gemini-3.1-flash-lite]
-
-[QueryEngine] Extracting keywords using gemini-3.1-flash-lite...
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-       /mount  
-       /model  
-       /serve  
-       /query  
-       /quit   
-       /exit   
-        -> Keywords extracted: {'low_level': ['test'], 'high_level': ['testing', 'eva
-luation']}
-[QueryEngine] Building context from VectorDB and GraphDB...
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      [QueryEngine] Generating final answer using gemini-3.1-flash-lite...
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                                                                                
---------------------------------------------------                              
-DEBUG - FULL PROMPT SENT TO LLM:                                                
---------------------------------------------------                              
----Context---                                                                   
-===== SEMANTIC TEXT CHUNKS =====                                                
---- Chunk 1 ---                                                                 
-Hello this is a test chunk.                                                     
---- Chunk 2 ---                                                                 
-words="aand aandu balatkar balatkari behen chod beti chod bhadva bhadve bhandve                                                                                
- bhangi bhootni ke bhosad bhosadi ke boobe chakke chinaal chinki chod chodu cho                                                                                
-du bhagat chooche choochi choope choot choot ke baal chootia chootiya chuche ch                                                                                
-uchi chudaap chudai khanaa chudam chudai chude chut chut ka chuha chut ka chura                                                                                
-n chut ka mail chut ke baal chut ke dhakkan chut maarli chutad chutadd chutan c                                                                                
-hutia          aand gaandfat gaandmasti gaandufad gandfattu gandu gashti gasti                                                                                 
-ghassa         ucchi gucchu harami haramzade hawas hawas ke pujari hijda hijra                                                                                 
-jhant          atu jhant ka keeda jhant ke baal jhant ke pissu jhantu kamine ka                                                                                
-miney          tta kutta kamina kutte ki aulad kutte ki jat kuttiya loda lodu l                                                                                
-und lu         lund ka bakkal lund khajoor lundtopi lundure maa ki chut maal ma
-
-      ==================================================                             ^
-            AdeptRAG Interactive CLI                                            
-==================================================                              
-Available commands:                                                             
-  /mount <folder> - Ingest documents from a folder                              
-  /model <name>   - Change the extraction LLM model                             
-  /query <text>   - Ask a question using the Dual-Search Query Engine           
-  /serve          - Start the 3D Graph Web UI                                   
-  /quit           - Exit the CLI                                                
-                                                                                
-arag> /query test                                                               
-                                                                                
-[Querying with gemini-3.1-flash-lite]                                           
-                                                                                
-[QueryEngine] Extracting keywords using gemini-3.1-flash-lite...                
-  -> Keywords extracted: {'low_level': ['test'], 'high_level': ['testing', 'eva                                                                                
-luation']}                                                                      
-[QueryEngine] Building context from VectorDB and GraphDB...                     
-[QueryEngine] Generating final answer using gemini-3.1-flash-lite...            
-                                                                                
---------------------------------------------------                              
-DEBUG - FULL PROMPT SENT TO LLM:                                                
---------------------------------------------------                              
----Context---                                                                   
-===== SEMANTIC TEXT CHUNKS =====                                                
---- Chunk 1 ---                                                                 
-Hello this is a test chunk.                                                     
---- Chunk 2 ---                                                                 
-words="aand aandu balatkar balatkari behen chod beti chod bhadva bhadve bhandve                                                                                
- bhangi bhootni ke bhosad bhosadi ke boobe chakke chinaal chinki chod chodu cho                                                                                
-du bhagat chooche choochi choope choot choot ke baal chootia chootiya chuche ch                                                                                
-uchi chudaap chudai khanaa chudam chudai chude chut chut ka chuha chut ka chura                                                                                
-n chut ka mail chut ke baal chut ke dhakkan chut maarli chutad chutadd chutan c                                                                                
-hutia chutiya gaand gaandfat gaandmasti gaandufad gandfattu gandu gashti gasti                                                                                 
-ghassa ghasti gucchi gucchu harami haramzade hawas hawas ke pujari hijda hijra                                                                                 
-jhant jhant chaatu jhant ka keeda jhant ke baal jhant ke pissu jhantu kamine ka                                                                                
-miney kanjar kutta kutta kamina kutte ki aulad kutte ki jat kuttiya loda lodu l                                                                                
-und lund choos lund ka bakkal lund khajoor lundtopi lundure maa ki chut maal ma                                                                               v
--------------------------------------------------------------------------------                                                                               -
-arag>

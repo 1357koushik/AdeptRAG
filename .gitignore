@@ -62,3 +62,10 @@ chroma/
 test_*.py
 test.html
 test2.html
+test_docs/
+debug_*.py
+
+# Debug Dumps & Output
+prompt_output.txt
+tui_dump.txt
+*dump*.txt
