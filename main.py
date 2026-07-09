@@ -197,18 +197,33 @@ def main():
     # ── append_to_output: MAIN THREAD ONLY ──
     def append_to_output(text: str):
         """Append text and auto-scroll to bottom."""
-        # Pre-wrap text to avoid prompt_toolkit scroll bugs with extremely long logical lines
-        wrapped_lines = []
-        for line in text.split('\n'):
-            if len(line) > 120:
-                wrapped_lines.extend(textwrap.wrap(line, width=120))
-            else:
-                wrapped_lines.append(line)
-        wrapped_text = '\n'.join(wrapped_lines)
-        
         current = output_buffer.text
-        new_text = current + wrapped_text
-        output_buffer.set_document(Document(new_text, cursor_position=len(new_text)), bypass_readonly=True)
+        
+        # Split by \r to process overwrites
+        parts = text.split('\r')
+        
+        for i, part in enumerate(parts):
+            if i > 0:
+                # This part was preceded by a \r, so we erase the current last line
+                last_newline = current.rfind('\n')
+                if last_newline != -1:
+                    current = current[:last_newline + 1]
+                else:
+                    current = ""
+            
+            if not part:
+                continue
+                
+            wrapped_lines = []
+            for line in part.split('\n'):
+                if len(line) > 120:
+                    wrapped_lines.extend(textwrap.wrap(line, width=120))
+                else:
+                    wrapped_lines.append(line)
+            wrapped_text = '\n'.join(wrapped_lines)
+            current += wrapped_text
+            
+        output_buffer.set_document(Document(current, cursor_position=len(current)), bypass_readonly=True)
         # Auto-scroll to the bottom: set a very large number, prompt_toolkit clamps it
         output_window.vertical_scroll = 10_000_000
 
@@ -272,17 +287,24 @@ def main():
                             chunk_size = 1200
                             chunk_overlap = 100
                             allowed_exts = {'.txt', '.md', '.json', '.csv', '.py', '.js', '.html'}
+                            
+                            valid_files = []
                             for root_dir, _, files in os.walk(folder):
                                 for file in files:
-                                    if not any(file.endswith(ext) for ext in allowed_exts):
-                                        continue
-                                    filepath = os.path.join(root_dir, file)
-                                    try:
-                                        with open(filepath, 'r', encoding='utf-8') as f:
-                                            content = f.read()
-                                        tokens = enc.encode(content)
-                                        if not tokens:
-                                            continue
+                                    if any(file.endswith(ext) for ext in allowed_exts):
+                                        valid_files.append(os.path.join(root_dir, file))
+                            
+                            total_files = len(valid_files)
+                            processed = 0
+                            print(f"\rProcessing files: {processed}/{total_files}", end='', flush=True)
+                            
+                            for filepath in valid_files:
+                                file = os.path.basename(filepath)
+                                try:
+                                    with open(filepath, 'r', encoding='utf-8') as f:
+                                        content = f.read()
+                                    tokens = enc.encode(content)
+                                    if tokens:
                                         for i in range(0, len(tokens), chunk_size - chunk_overlap):
                                             chunk_tokens = tokens[i:i + chunk_size]
                                             chunk_text = enc.decode(chunk_tokens)
@@ -297,25 +319,20 @@ def main():
                                             )
                                             result = classify_heuristic(chunk_text, Path(filepath))
                                             label = result.get('label', 'USEFUL')
-                                            if label == 'NOT_USEFUL':
-                                                print(f"- {file} (Chunk {chunk_idx}): Saved to VectorDB | Dump Data (Skipping LLM)")
-                                            else:
-                                                print(f"- {file} (Chunk {chunk_idx}): Saved to VectorDB | Useful -> Extracting with {state['current_model']}...")
+                                            if label != 'NOT_USEFUL':
                                                 extracted = extract_entities(chunk_text, state['current_model'])
-                                                entities_count = sum(1 for e in extracted if e['type'] == 'entity')
-                                                relations_count = sum(1 for e in extracted if e['type'] == 'relation')
-                                                print(f"  -> Extracted {entities_count} entities, {relations_count} relations.")
                                                 for item in extracted:
                                                     if item['type'] == 'entity':
                                                         state["graph_store"].upsert_entity(
                                                             item['name'], item.get('entity_type', ''), item.get('description', ''), source_file=file)
-                                                        print(f"     [Entity] {item['name']} ({item.get('entity_type', '')})")
                                                     elif item['type'] == 'relation':
                                                         state["graph_store"].upsert_relation(
                                                             item['source'], item['target'], item.get('keywords', ''), item.get('description', ''), source_file=file)
-                                                        print(f"     [Relation] {item['source']} -> {item['target']} ({item.get('keywords', '')})")
-                                    except Exception as e:
-                                        print(f"  Skipping {file}: {e}")
+                                except Exception:
+                                    pass
+                                processed += 1
+                                print(f"\rProcessing files: {processed}/{total_files}", end='', flush=True)
+                                
                             state["graph_store"].save_to_disk()
                         else:
                             print(f"Error: Directory '{folder}' not found.")
@@ -356,7 +373,6 @@ def main():
 
                     if query_text:
                         engine = QueryEngine(state["vector_store"], state["graph_store"], state["current_model"])
-                        print(f"\n[Querying with {state['current_model']}, Mode: {mode}]")
                         try:
                             answer, debug_prompt = engine.query(query_text, mode=mode)
                         except Exception as qe:
@@ -369,22 +385,11 @@ def main():
                         # Also log the answer length to debug file
                         with open("arag_debug.log", "a") as df:
                             df.write(f"ANSWER LEN={len(answer)} ANSWER_REPR={repr(answer[:100])}\n")
-                        # Print debug prompt FIRST because it's huge
-                        print("\n" + "-" * 50)
-                        print("DEBUG - FULL PROMPT SENT TO LLM:")
-                        print("-" * 50)
-                        print(debug_prompt)
-                        print("-" * 50 + "\n")
 
-                        # Print answer LAST so it's at the bottom of the screen
-                        print("\n" + "=" * 50)
-                        print("ANSWER:")
-                        print("=" * 50)
                         if answer:
-                            print(answer)
+                            print(f"\n{answer}\n")
                         else:
-                            print("[No answer returned from LLM]")
-                        print("=" * 50 + "\n")
+                            print("\n[No answer returned from LLM]\n")
                     else:
                         print("Usage: /query <your question>\n")
 
